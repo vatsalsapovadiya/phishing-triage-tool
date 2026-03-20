@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Analysis Results</title>
+  <style>
+    body { background:#0d1117; color:#c9d1d9; font-family:'Courier New',monospace; padding:30px; }
+    h1   { color:#00f2ff; }
+    h2   { color:#58a6ff; margin-top:20px; }
+    .card { background:#161b22; border:1px solid #30363d; border-radius:8px; padding:20px; margin:15px 0; }
+    table { width:100%; border-collapse:collapse; margin-top:10px; }
+    th,td { border:1px solid #30363d; padding:8px; text-align:left; font-size:13px; }
+    th    { background:#0d1117; color:#58a6ff; }
+    .high   { color:#f85149; font-weight:bold; }
+    .medium { color:#d29922; font-weight:bold; }
+    .low    { color:#3fb950; font-weight:bold; }
+    a { color:#00f2ff; }
+  </style>
+</head>
+<body>
+  <h1>🛡️ Triage Results — {{ parsed.file }}</h1>
+
+  <div class="card">
+    <h2>Threat Score</h2>
+    <p>Score: <strong>{{ threat.score }}/100</strong> &nbsp;
+      <span class="{{ threat.severity | lower | replace('🔴 ','') | replace('🟡 ','') | replace('🟢 ','') }}">
+        {{ threat.severity }}
+      </span>
+    </p>
+    {% for r in threat.reasons %}
+      <p style="color:#f85149; font-size:13px;">⚠ {{ r }}</p>
+    {% endfor %}
+  </div>
+
+  <div class="card">
+    <h2>Spoofing Flags</h2>
+    {% if parsed.spoofing_flags %}
+      {% for flag in parsed.spoofing_flags %}
+        <p style="color:#f85149;">{{ flag }}</p>
+      {% endfor %}
+    {% else %}
+      <p style="color:#3fb950;">✓ None detected</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Extracted IOCs</h2>
+    <p><strong>URLs:</strong> {{ iocs.urls | length }}</p>
+    <p><strong>IPs:</strong> {{ iocs.ips | length }}</p>
+    <p><strong>Domains:</strong> {{ iocs.domains | length }}</p>
+    <p><strong>Attachments:</strong> {{ iocs.attachment_hashes | length }}</p>
+  </div>
+
+  <div class="card">
+    <h2>Download Report</h2>
+    <a href="/download/{{ report_pdf }}">📄 Download PDF Report</a>
+  </div>
+
+  <br>
+  <a href="/">← Analyze Another Email</a>
+</body>
+</html>
