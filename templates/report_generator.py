@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: 'Courier New', monospace; background: #0d1117; color: #c9d1d9; padding: 30px; }
+    h1   { color: #00f2ff; border-bottom: 2px solid #00f2ff; padding-bottom: 8px; }
+    h2   { color: #58a6ff; margin-top: 30px; }
+    .badge-high     { background: #da3633; color: white; padding: 4px 12px; border-radius: 4px; font-weight: bold; }
+    .badge-medium   { background: #d29922; color: black; padding: 4px 12px; border-radius: 4px; font-weight: bold; }
+    .badge-low      { background: #238636; color: white; padding: 4px 12px; border-radius: 4px; font-weight: bold; }
+    table  { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #30363d; padding: 8px 12px; text-align: left; font-size: 13px; }
+    th     { background: #161b22; color: #58a6ff; }
+    tr:nth-child(even) { background: #161b22; }
+    .flag  { color: #f85149; font-size: 13px; margin: 4px 0; }
+    .meta  { color: #8b949e; font-size: 12px; }
+    .ioc   { color: #f0883e; word-break: break-all; font-size: 12px; }
+    .section { background: #161b22; border: 1px solid #30363d; padding: 16px; border-radius: 6px; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <h1>🛡️ Phishing Triage Report</h1>
+  <p class="meta">Generated: {{ generated_at }} | File: {{ email_file }}</p>
+
+  <div class="section">
+    <h2>Threat Assessment</h2>
+    <p>
+      Score: <strong>{{ threat.score }}/100</strong> &nbsp;
+      <span class="badge-{{ threat.severity | lower | replace('🔴 ', '') | replace('🟡 ', '') | replace('🟢 ', '') }}">
+        {{ threat.severity }}
+      </span>
+    </p>
+    <p><strong>Reasons:</strong></p>
+    {% for r in threat.reasons %}
+      <div class="flag">⚠ {{ r }}</div>
+    {% endfor %}
+  </div>
+
+  <div class="section">
+    <h2>Email Headers</h2>
+    <table>
+      <tr><th>Field</th><th>Value</th></tr>
+      <tr><td>Subject</td><td>{{ headers.subject }}</td></tr>
+      <tr><td>From</td><td>{{ headers.from }}</td></tr>
+      <tr><td>Reply-To</td><td>{{ headers.reply_to }}</td></tr>
+      <tr><td>Return-Path</td><td>{{ headers.return_path }}</td></tr>
+      <tr><td>Date</td><td>{{ headers.date }}</td></tr>
+      <tr><td>SPF</td><td>{{ headers.spf }}</td></tr>
+      <tr><td>DKIM</td><td>{{ headers.dkim }}</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Spoofing Indicators</h2>
+    {% if spoofing_flags %}
+      {% for flag in spoofing_flags %}
+        <div class="flag">{{ flag }}</div>
+      {% endfor %}
+    {% else %}
+      <p style="color:#238636">✓ No spoofing indicators detected</p>
+    {% endif %}
+  </div>
+
+  <div class="section">
+    <h2>URL Analysis</h2>
+    {% if enriched.urls %}
+    <table>
+      <tr><th>URL</th><th>VT Malicious</th><th>Verdict</th></tr>
+      {% for item in enriched.urls %}
+      <tr>
+        <td class="ioc">{{ item.ioc[:80] }}{% if item.ioc|length > 80 %}...{% endif %}</td>
+        <td>{{ item.analysis.malicious | default('N/A') }}</td>
+        <td>{{ item.analysis.verdict | default('N/A') }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% else %}<p class="meta">No URLs found.</p>{% endif %}
+  </div>
+
+  <div class="section">
+    <h2>IP Reputation</h2>
+    {% if enriched.ips %}
+    <table>
+      <tr><th>IP</th><th>Abuse Score</th><th>Country</th><th>ISP</th><th>Verdict</th></tr>
+      {% for item in enriched.ips %}
+      <tr>
+        <td class="ioc">{{ item.ioc }}</td>
+        <td>{{ item.analysis.abuse_score | default('N/A') }}</td>
+        <td>{{ item.analysis.country | default('N/A') }}</td>
+        <td>{{ item.analysis.isp | default('N/A') }}</td>
+        <td>{{ item.analysis.verdict | default('N/A') }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% else %}<p class="meta">No public IPs found.</p>{% endif %}
+  </div>
+
+  <div class="section">
+    <h2>Attachment Hashes</h2>
+    {% if enriched.file_hashes %}
+    <table>
+      <tr><th>Filename</th><th>SHA256</th><th>Verdict</th></tr>
+      {% for item in enriched.file_hashes %}
+      <tr>
+        <td>{{ item.filename }}</td>
+        <td class="ioc">{{ item.ioc[:40] }}...</td>
+        <td>{{ item.analysis.verdict | default('N/A') }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% else %}<p class="meta">No attachments found.</p>{% endif %}
+  </div>
+
+  <div class="section">
+    <h2>MITRE ATT&CK Mapping</h2>
+    <table>
+      <tr><th>Technique ID</th><th>Name</th><th>Observed</th></tr>
+      <tr><td>T1566</td><td>Phishing</td><td>Email received</td></tr>
+      <tr><td>T1598</td><td>Phishing for Information</td><td>Credential harvesting indicators</td></tr>
+      <tr><td>T1204</td><td>User Execution</td><td>Malicious links/attachments present</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Analyst Recommendation</h2>
+    {% if threat.score >= 70 %}
+    <p>🔴 <strong>BLOCK & ESCALATE</strong> — High confidence phishing. Block sender domain, quarantine email, escalate to Tier-2.</p>
+    {% elif threat.score >= 40 %}
+    <p>🟡 <strong>INVESTIGATE FURTHER</strong> — Suspicious indicators present. Perform additional manual review before user notification.</p>
+    {% else %}
+    <p>🟢 <strong>MONITOR</strong> — Low threat score. Continue monitoring. No immediate action required.</p>
+    {% endif %}
+  </div>
+</body>
+</html>
