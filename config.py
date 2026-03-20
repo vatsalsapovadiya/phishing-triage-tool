@@ -3,13 +3,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-VIRUSTOTAL_API_KEY = os.getenv("VIRUSTOTAL_API_KEY")
-ABUSEIPDB_API_KEY  = os.getenv("ABUSEIPDB_API_KEY")
-URLSCAN_API_KEY    = os.getenv("URLSCAN_API_KEY")
-```
-
-Create `.env` file (NEVER push this):
-```
-VIRUSTOTAL_API_KEY=165bbdc528a0fb6b916d5b2eef038ba492ff1377339b2088cadbc29ed8ea8d45
-ABUSEIPDB_API_KEY=1b11822a614325e41713c4ef8086348824af4d8dbfd90a814b2dbf850e3fb6faf3aee78df57f7c1b
-URLSCAN_API_KEY=019d0b5f-e3b9-7167-9bd7-0c89b1094e24
+VIRUSTOTAL_API_KEY = os.getenv("165bbdc528a0fb6b916d5b2eef038ba492ff1377339b2088cadbc29ed8ea8d45")
+ABUSEIPDB_API_KEY  = os.getenv("1b11822a614325e41713c4ef8086348824af4d8dbfd90a814b2dbf850e3fb6faf3aee78df57f7c1b")
+URLSCAN_API_KEY    = os.getenv("019d0b5f-e3b9-7167-9bd7-0c89b1094e24")
