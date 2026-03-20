@@ -20,6 +20,7 @@ requests==2.32.5
 tinycss2==1.5.1
 tinyhtml5==2.1.0
 urllib3==2.6.3
+weasyprint==68.1
 webencodings==0.5.1
 Werkzeug==3.1.6
 zopfli==0.4.1

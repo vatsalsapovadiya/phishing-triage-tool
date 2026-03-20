@@ -1,47 +1,32 @@
 import os
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader
-from weasyprint import HTML
 
 
-def generate_report(
-    parsed_email: dict,
-    iocs: dict,
-    enriched: dict,
-    threat: dict,
-    output_dir: str = "reports/samples"
-) -> str:
-    """Generate HTML + PDF triage report."""
+def generate_report(parsed_email, iocs, enriched, threat, output_dir="reports/samples"):
 
     os.makedirs(output_dir, exist_ok=True)
 
-    env = Environment(loader=FileSystemLoader("templates"))
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    env      = Environment(loader=FileSystemLoader(os.path.join(BASE_DIR, "templates")))
     template = env.get_template("report_template.html")
 
     context = {
-        "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC"),
-        "email_file":   parsed_email["file"],
-        "headers":      parsed_email["headers"],
+        "generated_at":   datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "email_file":     parsed_email["file"],
+        "headers":        parsed_email["headers"],
         "spoofing_flags": parsed_email["spoofing_flags"],
-        "iocs":         iocs,
-        "enriched":     enriched,
-        "threat":       threat,
+        "iocs":           iocs,
+        "enriched":       enriched,
+        "threat":         threat,
     }
 
-    html_out = template.render(**context)
-
-    # Save HTML
-    base_name   = parsed_email["file"].replace(".eml", "")
-    html_path   = os.path.join(output_dir, f"{base_name}_report.html")
-    pdf_path    = os.path.join(output_dir, f"{base_name}_report.pdf")
+    html_out  = template.render(**context)
+    base_name = parsed_email["file"].replace(".eml", "")
+    html_path = os.path.join(output_dir, f"{base_name}_report.html")
 
     with open(html_path, "w") as f:
         f.write(html_out)
 
-    # Save PDF
-    HTML(string=html_out).write_pdf(pdf_path)
-
     print(f"[+] Report saved: {html_path}")
-    print(f"[+] PDF saved:    {pdf_path}")
-
     return html_path
